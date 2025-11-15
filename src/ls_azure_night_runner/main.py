@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+import os
 import sys
-
 from pathlib import Path
 
 from .config import PlannerConfig, get_spec_root
@@ -12,10 +12,25 @@ from .git_sandbox import create_local_sandbox_branches
 from .missions import format_plan, load_missions, select_ready_missions
 from .dispatcher import run_mission_executor
 from .results import make_run_id, write_mission_result
+from .spec_bootstrap import ensure_spec_repo
 
 
 def main() -> None:
     """Generate and print a dry-run Night Plan from local missions."""
+
+    env_spec_root = os.getenv("LS_SPEC_ROOT")
+    if env_spec_root:
+        desired_spec_root = Path(env_spec_root).expanduser().resolve()
+    else:
+        here = Path(__file__).resolve()
+        candidates = [here.parents[2] / "ls-spec"]
+        if len(here.parents) >= 4:
+            candidates.append(here.parents[3] / "ls-spec")
+        desired_spec_root = next(
+            (path for path in candidates if path.exists()), candidates[-1]
+        )
+
+    ensure_spec_repo(desired_spec_root)
 
     try:
         spec_root = get_spec_root()
