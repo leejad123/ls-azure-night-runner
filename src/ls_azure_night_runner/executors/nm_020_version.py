@@ -32,6 +32,7 @@ def run_nm_020(repo_root: Path, mission: Dict[str, object]) -> Result:
         "version_file": "ls_backend/version.py",
         "success": False,
         "message": "",
+        "committed": False,
     }
 
     git_dir = repo_root / ".git"
@@ -67,6 +68,30 @@ def run_nm_020(repo_root: Path, mission: Dict[str, object]) -> Result:
         )
         return result
 
+    status = _run(["git", "status", "--porcelain"], cwd=repo_root)
+    if status.returncode != 0:
+        result["message"] = f"git status failed: {status.stderr.strip()}"
+        return result
+
+    if not status.stdout.strip():
+        result["success"] = True
+        result["message"] = "NM-020 version check succeeded (no changes to commit)"
+        return result
+
+    add_run = _run(["git", "add", "ls_backend/version.py"], cwd=repo_root)
+    if add_run.returncode != 0:
+        result["message"] = f"git add failed: {add_run.stderr.strip()}"
+        return result
+
+    commit_run = _run(
+        ["git", "commit", "-m", "NM-020: Night Runner version setup"],
+        cwd=repo_root,
+    )
+    if commit_run.returncode != 0:
+        result["message"] = f"git commit failed: {commit_run.stderr.strip()}"
+        return result
+
     result["success"] = True
-    result["message"] = "NM-020 version check succeeded"
+    result["committed"] = True
+    result["message"] = "NM-020 version change committed locally"
     return result
