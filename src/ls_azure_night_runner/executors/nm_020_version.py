@@ -8,6 +8,7 @@ import sys
 from typing import Dict
 
 from ..git_sandbox import branch_name_for_mission
+from ..github_pr import create_pr
 
 Result = Dict[str, object]
 
@@ -43,6 +44,7 @@ def run_nm_020(repo_root: Path, mission: Dict[str, object]) -> Result:
         "message": "",
         "committed": False,
         "pushed": False,
+        "pr": None,
     }
 
     git_dir = repo_root / ".git"
@@ -115,5 +117,26 @@ def run_nm_020(repo_root: Path, mission: Dict[str, object]) -> Result:
         result["message"] += f" and {push_msg}"
     else:
         result["message"] += f" but {push_msg}"
+        return result
+
+    pr_body = (
+        "Night Runner Mission NM-020.\n\n"
+        "- Adds ls_backend.version version constant for ls-backend.\n"
+        "- Runs compileall to validate.\n"
+        f"- Sandbox branch: {branch}\n"
+    )
+    pr_result = create_pr(
+        owner="leejad123",
+        repo="ls-backend",
+        head=branch,
+        base="main",
+        title="NM-020: add version constant to ls-backend",
+        body=pr_body,
+    )
+    result["pr"] = pr_result
+    if pr_result.get("success"):
+        result["message"] += f" and opened PR #{pr_result.get('number')}"
+    else:
+        result["message"] += f" but PR failed: {pr_result.get('message')}"
 
     return result
