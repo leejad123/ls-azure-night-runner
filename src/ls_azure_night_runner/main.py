@@ -11,6 +11,7 @@ from .github_clone import clone_all
 from .git_sandbox import create_local_sandbox_branches
 from .missions import format_plan, load_missions, select_ready_missions
 from .dispatcher import run_mission_executor
+from .results import make_run_id, write_mission_result
 
 
 def main() -> None:
@@ -21,6 +22,9 @@ def main() -> None:
     except RuntimeError as exc:  # surface misconfiguration cleanly
         print(f"Error: {exc}", file=sys.stderr)
         raise SystemExit(1)
+
+    run_id = make_run_id()
+    print(f"Night Runner run_id: {run_id}")
 
     config = PlannerConfig(spec_root=spec_root)
     missions = load_missions(config.spec_root)
@@ -36,6 +40,7 @@ def main() -> None:
     for mission in ready_missions:
         exec_result = run_mission_executor(mission, repos_root)
         print(f"Executor result for {mission.get('mission_id')}: {exec_result}")
+        write_mission_result(run_id, exec_result)
     plan_text = format_plan(ready_missions)
     print(plan_text)
 
