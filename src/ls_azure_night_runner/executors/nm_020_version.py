@@ -22,6 +22,15 @@ def _run(cmd: list[str], cwd: Path) -> subprocess.CompletedProcess:
     )
 
 
+def push_branch(repo_root: Path, branch_name: str) -> tuple[bool, str]:
+    """Push the mission branch to origin."""
+
+    push = _run(["git", "push", "origin", branch_name], cwd=repo_root)
+    if push.returncode != 0:
+        return False, f"git push failed: {push.stderr.strip()}"
+    return True, f"pushed origin/{branch_name}"
+
+
 def run_nm_020(repo_root: Path, mission: Dict[str, object]) -> Result:
     repo = "ls-backend"
     branch = branch_name_for_mission(mission)
@@ -33,6 +42,7 @@ def run_nm_020(repo_root: Path, mission: Dict[str, object]) -> Result:
         "success": False,
         "message": "",
         "committed": False,
+        "pushed": False,
     }
 
     git_dir = repo_root / ".git"
@@ -94,4 +104,16 @@ def run_nm_020(repo_root: Path, mission: Dict[str, object]) -> Result:
     result["success"] = True
     result["committed"] = True
     result["message"] = "NM-020 version change committed locally"
+
+    if not branch.startswith("night/") or "NM-020" not in branch:
+        result["message"] += " (push skipped: unexpected branch name)"
+        return result
+
+    pushed, push_msg = push_branch(repo_root, branch)
+    result["pushed"] = pushed
+    if pushed:
+        result["message"] += f" and {push_msg}"
+    else:
+        result["message"] += f" but {push_msg}"
+
     return result
