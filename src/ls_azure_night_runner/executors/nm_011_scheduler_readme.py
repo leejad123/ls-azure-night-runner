@@ -23,6 +23,38 @@ def _run(cmd: list[str], cwd: Path) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, check=False)
 
 
+def sync_with_remote_sandbox(repo_root: Path, branch_name: str) -> tuple[bool, str]:
+    fetch = _run(["git", "fetch", "origin", branch_name], cwd=repo_root)
+    missing_remote = False
+    if fetch.returncode != 0:
+        err = fetch.stderr.strip().lower()
+        if "couldn't find remote ref" in err or "could not find remote ref" in err:
+            missing_remote = True
+        else:
+            return False, fetch.stderr.strip() or "git fetch failed"
+
+    checkout = _run(["git", "checkout", branch_name], cwd=repo_root)
+    if checkout.returncode != 0:
+        return False, checkout.stderr.strip() or "git checkout failed"
+
+    if missing_remote:
+        return True, "no remote branch; using local sandbox"
+
+    reset = _run([
+        "git",
+        "reset",
+        "--hard",
+        f"origin/{branch_name}",
+    ], cwd=repo_root)
+    if reset.returncode != 0:
+        err = reset.stderr.strip().lower()
+        if "unknown revision" in err or "not a valid object" in err:
+            return True, "remote branch missing after fetch; using local only"
+        return False, reset.stderr.strip() or "git reset failed"
+
+    return True, "synced with remote sandbox"
+
+
 def run_nm_011(repo_root: Path, branch_name: str) -> Dict[str, object]:
     result: Dict[str, object] = {
         "mission": "NM-011",
@@ -39,9 +71,9 @@ def run_nm_011(repo_root: Path, branch_name: str) -> Dict[str, object]:
         result["message"] = "not a git repo"
         return result
 
-    checkout = _run(["git", "checkout", branch_name], cwd=repo_root)
-    if checkout.returncode != 0:
-        result["message"] = f"git checkout failed: {checkout.stderr.strip()}"
+    sync_ok, sync_msg = sync_with_remote_sandbox(repo_root, branch_name)
+    if not sync_ok:
+        result["message"] = f"NM-011 failed to sync sandbox branch: {sync_msg}"
         return result
 
     readme_path = repo_root / "README.md"
