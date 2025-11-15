@@ -7,10 +7,12 @@ from typing import Any, Dict
 
 from .executors.nm_020_version import run_nm_020
 from .executors.nm_010_backend_readme import run_nm_010
+from .executors.nm_011_scheduler_readme import run_nm_011
 from .git_sandbox import branch_name_for_mission
 
 EXECUTORS = {
     "NM-010": lambda repo_path, mission, branch: run_nm_010(repo_path, branch),
+    "NM-011": lambda repo_path, mission, branch: run_nm_011(repo_path, branch),
     "NM-020": lambda repo_path, mission, branch: run_nm_020(repo_path, mission),
 }
 
