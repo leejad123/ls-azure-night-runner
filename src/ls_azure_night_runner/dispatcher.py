@@ -6,10 +6,12 @@ from pathlib import Path
 from typing import Any, Dict
 
 from .executors.nm_020_version import run_nm_020
+from .executors.nm_010_backend_readme import run_nm_010
 from .git_sandbox import branch_name_for_mission
 
 EXECUTORS = {
-    "NM-020": run_nm_020,
+    "NM-010": lambda repo_path, mission, branch: run_nm_010(repo_path, branch),
+    "NM-020": lambda repo_path, mission, branch: run_nm_020(repo_path, mission),
 }
 
 
@@ -27,6 +29,7 @@ def run_mission_executor(mission: Dict[str, Any], repos_root: Path):
     if not isinstance(repos, list):
         return {"mission": mission_id, "skipped": True, "reason": "invalid repos"}
 
+    branch = branch_name_for_mission(mission)
     results = []
     for repo in repos:
         if not isinstance(repo, dict):
@@ -35,7 +38,7 @@ def run_mission_executor(mission: Dict[str, Any], repos_root: Path):
         if not repo_name:
             continue
         repo_path = repos_root / repo_name
-        result = executor(repo_path, mission)
+        result = executor(repo_path, mission, branch)
         results.append(result)
 
     if not results:
