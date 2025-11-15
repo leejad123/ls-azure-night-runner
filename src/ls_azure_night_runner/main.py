@@ -8,8 +8,9 @@ from pathlib import Path
 
 from .config import PlannerConfig, get_spec_root
 from .github_clone import clone_all
-from .git_sandbox import create_local_sandbox_branches
+from .git_sandbox import branch_name_for_mission, create_local_sandbox_branches
 from .missions import format_plan, load_missions, select_ready_missions
+from .executors.nm_020_version import run_nm_020
 
 
 def main() -> None:
@@ -31,6 +32,13 @@ def main() -> None:
         repos_root = Path(__file__).resolve().parents[2] / "workspace" / "repos"
     created = create_local_sandbox_branches(ready_missions, repos_root)
     print(f"Created sandbox branches (local only): {created}")
+
+    for mission in ready_missions:
+        if mission.get("mission_id") == "NM-020":
+            repo_path = repos_root / "ls-backend"
+            branch = branch_name_for_mission(mission)
+            result = run_nm_020(repo_path, mission)
+            print(f"NM-020 result: {result}")
     plan_text = format_plan(ready_missions)
     print(plan_text)
 
