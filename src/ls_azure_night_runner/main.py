@@ -5,6 +5,7 @@ from __future__ import annotations
 import sys
 
 from .config import PlannerConfig, get_spec_root
+from .github_clone import clone_all
 from .missions import format_plan, load_missions, select_ready_missions
 
 
@@ -20,6 +21,8 @@ def main() -> None:
     config = PlannerConfig(spec_root=spec_root)
     missions = load_missions(config.spec_root)
     ready_missions = select_ready_missions(missions, config.max_missions)
+    cloned_repos = clone_all()
+    print(f"Cloned repos: {cloned_repos}")
     plan_text = format_plan(ready_missions)
     print(plan_text)
 
