@@ -1,8 +1,27 @@
-"""Entry point stub for the Azure Night Runner orchestrator."""
+"""Dry-run Night Runner orchestrator entry point."""
+
+from __future__ import annotations
+
+import sys
+
+from .config import PlannerConfig, get_spec_root
+from .missions import format_plan, load_missions, select_ready_missions
+
 
 def main() -> None:
-    """Placeholder orchestration hook until Azure wiring lands."""
-    print("ls-azure-night-runner orchestrator stub (wired to Spec, not Azure yet).")
+    """Generate and print a dry-run Night Plan from local missions."""
+
+    try:
+        spec_root = get_spec_root()
+    except RuntimeError as exc:  # surface misconfiguration cleanly
+        print(f"Error: {exc}", file=sys.stderr)
+        raise SystemExit(1)
+
+    config = PlannerConfig(spec_root=spec_root)
+    missions = load_missions(config.spec_root)
+    ready_missions = select_ready_missions(missions, config.max_missions)
+    plan_text = format_plan(ready_missions)
+    print(plan_text)
 
 
 if __name__ == "__main__":
