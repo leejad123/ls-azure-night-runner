@@ -344,6 +344,8 @@ def run_nm910_locally(repo_root_path: Path, run_dir: Path) -> str:
     mission = {"mission_id": "NM-910", "repos": [{"name": repo_root_path.name}]}
     buffer = io.StringIO()
     with contextlib.redirect_stdout(buffer):
+        # Diagnostic-only: log Grok secret configuration status into the captured logs.
+        log_night_runner_secret_status()
         run_nm_910_memory_probe(repo_root_path, mission, branch_name)
     return buffer.getvalue()
 
@@ -460,8 +462,6 @@ def print_cycle_summary(data: Dict[str, Any]) -> None:
 
 def main() -> None:
     args = parse_args()
-    # Diagnostic-only: log Grok secret configuration status without changing behavior.
-    log_night_runner_secret_status()
     if args.run_local_nm910 or args.local_cycle:
         repo_root_path = Path(args.repo_root).resolve()
         local_execution_name: Optional[str] = None
