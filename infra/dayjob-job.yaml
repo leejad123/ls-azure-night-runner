@@ -1,0 +1,47 @@
+apiVersion: jobs.containerapps.io/v1
+kind: Job
+metadata:
+  name: ls-dayjob
+spec:
+  image: cpcnightacr01.azurecr.io/ls-orchestrator:dev
+  replicaMode: Single
+  env:
+    - name: MODE
+      value: "dayjob"
+    - name: LS_SPEC_ROOT
+      value: "/workspace/ls-spec"
+    - name: LS_ORCHESTRATOR_ROOT
+      value: "/workspace/ls-orchestrator"
+    - name: ENVIRONMENT
+      value: "dev"
+    - name: PRO_API_KEY
+      secretRef: pro-api-key-secret
+    - name: CODEX_API_KEY
+      secretRef: codex-api-key-secret
+    - name: GITHUB_TOKEN
+      secretRef: github-token-secret
+    - name: GROK_API_KEY
+      secretRef: grok-api-key-secret
+    - name: DAY_MISSION_PATH
+      value: "/workspace/missions/day/mission.json"
+    - name: DAY_RUNS_ROOT
+      value: "/workspace/runs/day"
+  secrets:
+    - name: pro-api-key-secret
+      keyVaultUrl: https://ls-dev-kv-20325.vault.azure.net/
+    - name: codex-api-key-secret
+      keyVaultUrl: https://ls-dev-kv-20325.vault.azure.net/
+    - name: github-token-secret
+      keyVaultUrl: https://ls-dev-kv-20325.vault.azure.net/
+    - name: grok-api-key-secret
+      keyVaultUrl: https://ls-dev-kv-20325.vault.azure.net/
+    - name: storage-key-secret
+      keyVaultUrl: https://ls-dev-kv-20325.vault.azure.net/
+  volumes:
+    - name: workspace
+      storageType: AzureFile
+      storageName: lsdevstorage20325
+      shareName: workspace
+  volumeMounts:
+    - volumeName: workspace
+      mountPath: /workspace
