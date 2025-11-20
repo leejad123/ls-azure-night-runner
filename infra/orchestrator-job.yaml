@@ -1,46 +1,65 @@
-apiVersion: jobs.containerapps.io/v1
-kind: Job
-metadata:
-  name: ls-orchestrator
-spec:
-  image: cpcnightacr01.azurecr.io/ls-orchestrator:dev
-  replicaMode: Single
-  schedule: "@always"
-  env:
-    - name: MODE
-      value: "orchestrator"
-    - name: LS_SPEC_ROOT
-      value: "/workspace/ls-spec"
-    - name: LS_ORCHESTRATOR_ROOT
-      value: "/workspace/ls-orchestrator"
-    - name: ORCH_DECISIONS_PATH
-      value: "/workspace/runs/orchestrator/orchestrator_decisions.jsonl"
-    - name: ORCH_PLAN_OUTPUT
-      value: "/workspace/orchestrator/plan"
-    - name: PRO_API_KEY
-      secretRef: pro-api-key-secret
-    - name: CODEX_API_KEY
-      secretRef: codex-api-key-secret
-    - name: GITHUB_TOKEN
-      secretRef: github-token-secret
-    - name: GROK_API_KEY
-      secretRef: grok-api-key-secret
-  secrets:
-    - name: pro-api-key-secret
-      keyVaultUrl: https://ls-dev-kv-20325.vault.azure.net/
-    - name: codex-api-key-secret
-      keyVaultUrl: https://ls-dev-kv-20325.vault.azure.net/
-    - name: github-token-secret
-      keyVaultUrl: https://ls-dev-kv-20325.vault.azure.net/
-    - name: grok-api-key-secret
-      keyVaultUrl: https://ls-dev-kv-20325.vault.azure.net/
-    - name: storage-key-secret
-      keyVaultUrl: https://ls-dev-kv-20325.vault.azure.net/
-  volumes:
-    - name: workspace
-      storageType: AzureFile
-      storageName: lsdevstorage20325
-      shareName: workspace
-  volumeMounts:
-    - volumeName: workspace
-      mountPath: /workspace
+name: ls-orchestrator
+type: Microsoft.App/jobs
+location: Canada Central
+properties:
+  environmentId: /subscriptions/a166cb6c-db65-4cca-91d1-e25dc2cdd1f6/resourceGroups/ls-night-runner-rg/providers/Microsoft.App/managedEnvironments/ls-night-runner-env
+  workloadProfileName: Consumption
+  configuration:
+    triggerType: Schedule
+    scheduleTriggerConfig:
+      cronExpression: "* * * * *"
+      parallelism: 1
+      replicaCompletionCount: 1
+    replicaRetryLimit: 0
+    replicaTimeout: 1800
+    registries:
+      - identity: ""
+        passwordSecretRef: cpcnightacr01azurecrio-cpcnightacr01
+        server: cpcnightacr01.azurecr.io
+        username: cpcnightacr01
+    secrets:
+      - name: cpcnightacr01azurecrio-cpcnightacr01
+      - name: pro-api-key-secret
+        keyVaultUrl: https://ls-dev-kv-20325.vault.azure.net/
+      - name: codex-api-key-secret
+        keyVaultUrl: https://ls-dev-kv-20325.vault.azure.net/
+      - name: github-token-secret
+        keyVaultUrl: https://ls-dev-kv-20325.vault.azure.net/
+      - name: grok-api-key-secret
+        keyVaultUrl: https://ls-dev-kv-20325.vault.azure.net/
+      - name: storage-key-secret
+        keyVaultUrl: https://ls-dev-kv-20325.vault.azure.net/
+  template:
+    containers:
+      - name: ls-orchestrator
+        image: cpcnightacr01.azurecr.io/ls-orchestrator:dev
+        env:
+          - name: MODE
+            value: orchestrator
+          - name: LS_SPEC_ROOT
+            value: /workspace/ls-spec
+          - name: LS_ORCHESTRATOR_ROOT
+            value: /workspace/ls-orchestrator
+          - name: ORCH_DECISIONS_PATH
+            value: /workspace/runs/orchestrator/orchestrator_decisions.jsonl
+          - name: ORCH_PLAN_OUTPUT
+            value: /workspace/orchestrator/plan
+          - name: PRO_API_KEY
+            secretRef: pro-api-key-secret
+          - name: CODEX_API_KEY
+            secretRef: codex-api-key-secret
+          - name: GITHUB_TOKEN
+            secretRef: github-token-secret
+          - name: GROK_API_KEY
+            secretRef: grok-api-key-secret
+        volumeMounts:
+          - mountPath: /workspace
+            volumeName: workspace
+        resources:
+          cpu: 0.25
+          memory: 0.5Gi
+    volumes:
+      - name: workspace
+        storageType: AzureFile
+        storageName: lsdevstorage20325
+        shareName: workspace
