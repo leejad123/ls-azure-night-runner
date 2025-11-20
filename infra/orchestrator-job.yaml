@@ -19,11 +19,11 @@ properties:
         username: cpcnightacr01
     secrets:
       - name: cpcnightacr01azurecrio-cpcnightacr01
+      - name: github-token
+        keyVaultUrl: https://ls-dev-kv-20325.vault.azure.net/
       - name: pro-api-key-secret
         keyVaultUrl: https://ls-dev-kv-20325.vault.azure.net/
       - name: codex-api-key-secret
-        keyVaultUrl: https://ls-dev-kv-20325.vault.azure.net/
-      - name: github-token-secret
         keyVaultUrl: https://ls-dev-kv-20325.vault.azure.net/
       - name: grok-api-key-secret
         keyVaultUrl: https://ls-dev-kv-20325.vault.azure.net/
@@ -49,7 +49,7 @@ properties:
           - name: CODEX_API_KEY
             secretRef: codex-api-key-secret
           - name: GITHUB_TOKEN
-            secretRef: github-token-secret
+            secretRef: github-token
           - name: GROK_API_KEY
             secretRef: grok-api-key-secret
         volumeMounts:
